@@ -1,0 +1,19 @@
+---
+# tasks file for apache
+- name: Install Apache
+  apt: 
+    name: '{{ item }}' 
+    update_cache: yes 
+    cache_valid_time: 3600 
+    state: present
+  sudo: yes
+  with_items:
+  - apache2
+  - php7.0
+  - libapache2-mod-php7.0
+  - php7.0-mysql
+- name: Apache restart
+  service: 
+    name: apache2
+    state: restarted
+    enabled: yes
