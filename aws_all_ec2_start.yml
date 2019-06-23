@@ -1,0 +1,21 @@
+- hosts: local
+  connection: local
+  gather_facts: False
+  vars:
+    region: us-east-2
+    instance_ids:
+      - 'i-02765012970cad4a0'
+      - 'i-0f0305224d830758d'
+  vars_files:
+    - aws_keys.yml
+  tasks:
+    - name: Start all the instances
+      ec2:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        instance_ids: '{{ instance_ids }}'
+        region: '{{ region }}'
+        state: running
+        wait: True
+        vpc_subnet_id: subnet-29e63245
+        assign_public_ip: yes

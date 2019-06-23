@@ -1,0 +1,50 @@
+- hosts: local
+  connection: local
+  gather_facts: False
+  vars:
+    region: us-east-2
+    instance_ids:
+      - 'i-02765012970cad4a0'
+  vars_files:
+    - aws_keys.yml
+  tasks:
+    - name: Launch EC2 instance
+      ec2:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        instance_ids: '{{ instance_ids }}'
+        region: '{{ region }}'
+        state: running
+        wait: True
+        vpc_subnet_id: subnet-29e63245
+        assign_public_ip: yes
+      register: ec2
+    - name: Add the host so that we can further contact it
+      add_host:
+        name: "{{ item.public_ip }}"
+        groups: webserver_instances
+      with_items: "{{ ec2.instances }}"
+- hosts: webserver_instances
+  vars:
+    AppName: HTOK_PHP
+  remote_user: ubuntu
+  become: yes
+  gather_facts: no
+  tasks: 
+    # - name: change apache2 virtual host
+    #   sudo: yes
+    #   lineinfile: 
+    #     dest: '/etc/apache2/sites-available/000-default.conf'
+    #     regexp: '^	DocumentRoot /var/www/html'
+    #     line: "	DocumentRoot /var/www/{{ AppName }}"
+    - name: 'Deploy code to apache server directory /var/www/{{ AppName }}/_DBConnection.php'
+      sudo: yes
+      copy:
+        src: '/applications/mamp/htdocs/{{ AppName }}/_DBConnection.php'
+        dest: '/var/www/{{ AppName }}/_DBConnection.php'
+    - name: Apache restart
+      service: 
+        name: apache2
+        state: restarted
+        enabled: yes
+     
